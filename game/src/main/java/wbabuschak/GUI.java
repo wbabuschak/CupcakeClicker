@@ -5,14 +5,17 @@ import javax.swing.*;
 
 public class GUI {
 
-    String title = "Cupcake Clicker v0.0.1";
+    String title = "Cupcake Clicker v0.0.2";
 
     private int CUPCAKE_GOAL = 1000000;
     private int cupcakes = 0;
-    private int bakeCount = 2;
+    private int bakeCount = 1;
     
-    private int upgrades;
-    private int doublers;
+    private int upgrades = 0;
+    private int doublers = 0;
+
+    private int upgradePrice = 10 * (upgrades + 1) * (bakeCount + upgrades);
+    private int doublerPrice = (int) Math.pow(10, doublers + 1);
 
     private JLabel cupcakeLabel;
     private JLabel actionLabel;
@@ -36,7 +39,7 @@ public class GUI {
         mainPanel.add(progressBar);
 
         // mainPanel layout
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 5, 15, 5));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 5, 15, 5)); 
         mainPanel.setLayout(new GridLayout(0, 1, 10, 10));
 
         // cupcakeLabel
@@ -55,12 +58,12 @@ public class GUI {
 
         upgradeButton = new JButton("Upgrade Ingredients!");
         upgradeButton.addActionListener( e -> upgradeIngredients());
-        upgradeButton.setToolTipText("Price: " + 10 * (upgrades + 1) * upgrades);
+        upgradeButton.setToolTipText("Price: " + upgradePrice);
         mainPanel.add(upgradeButton);
 
         doublerButton = new JButton("Buy Doubler!");
         doublerButton.addActionListener( e -> buyDoubler());
-        doublerButton.setToolTipText("Price: " + (int) Math.pow(10, doublers + 1));
+        doublerButton.setToolTipText("Price: " + doublerPrice);
         mainPanel.add(doublerButton);
         
 
@@ -77,9 +80,13 @@ public class GUI {
         cupcakeLabel.setText("Cupcakes: " + cupcakes);
         progressBar.setValue(cupcakes);
         progressBar.setToolTipText("Cookies Baked: " + progressBar.getValue() + " / " + CUPCAKE_GOAL);
-        doublerButton.setToolTipText("Price: " + (int) Math.pow(10, doublers + 1));
-        bakeButton.setToolTipText("Bake value (" + bakeCount / 2 + ") doubled " + doublers + " times = " + (int) Math.pow(bakeCount, doublers));
-        upgradeButton.setToolTipText("Price: " + 10 * (upgrades + 1) * upgrades);
+
+        upgradePrice = 10 * (upgrades + 1) * upgrades;
+        doublerPrice = (int) Math.pow(10, doublers + 1);
+
+        doublerButton.setToolTipText("Price: " + doublerPrice);
+        bakeButton.setToolTipText("Bake value (" + bakeCount + ") doubled " + doublers + " times = " + bakeCount * (int) Math.pow(2, doublers));
+        upgradeButton.setToolTipText("Price: " + upgradePrice);
         checkWin();
     }
 
@@ -104,21 +111,20 @@ public class GUI {
     }
 
     private void bakeCupcake() {
-        cupcakes += (int) Math.pow(bakeCount, doublers);
+        cupcakes += bakeCount * (int) Math.pow(2, doublers);
         if ((int) Math.pow(bakeCount, doublers) > 1){
-            actionLabel.setText("Baked " + (int) Math.pow(bakeCount, doublers) + " cupcakes!");
+            actionLabel.setText("Baked " + bakeCount * (int) Math.pow(2, doublers) + " cupcakes!");
         } else {
-            actionLabel.setText("Baked " + (int) Math.pow(bakeCount, doublers) + " cupcake!");
+            actionLabel.setText("Baked " + bakeCount * (int) Math.pow(2, doublers) + " cupcake!");
         }
         update();
     }
 
     private void buyDoubler() {
-        int price = (int) Math.pow(10, doublers + 1);
-        if (cupcakes >= price){
-            cupcakes -= price;
+        if (cupcakes >= doublerPrice){
+            cupcakes -= doublerPrice;
             doublers++;
-            actionLabel.setText("Doubler purchased! -" + price + " cupcakes!");
+            actionLabel.setText("Doubler purchased! -" + doublerPrice + " cupcakes!");
         } else {
             actionLabel.setText("Insufficient funds to purchase doubler.");
         }
@@ -126,12 +132,11 @@ public class GUI {
     }
 
     private void upgradeIngredients() {
-        int price = 10 * (upgrades + 1) * upgrades;
-        if (cupcakes >= price){
-            cupcakes -= price;
+        if (cupcakes >= upgradePrice){
+            cupcakes -= upgradePrice;
             upgrades++;
             bakeCount++;
-            actionLabel.setText("Upgrade purchased! -" + price + " cupcakes!");
+            actionLabel.setText("Upgrade purchased! -" + upgradePrice + " cupcakes!");
         } else {
             actionLabel.setText("Insufficient funds to purchase upgrade.");
         }
