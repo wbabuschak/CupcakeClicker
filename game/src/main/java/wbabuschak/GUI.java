@@ -2,10 +2,11 @@ package wbabuschak;
 
 import java.awt.*;
 import javax.swing.*;
+import java.text.*;
 
 public class GUI {
 
-    String title = "Cupcake Clicker v0.0.2";
+    String title = "Cupcake Clicker v0.0.3";
 
     private int CUPCAKE_GOAL = 1000000;
     private int cupcakes = 0;
@@ -21,51 +22,57 @@ public class GUI {
     private JLabel actionLabel;
 
     private JProgressBar progressBar;
+    private NumberFormat commaFormat = NumberFormat.getInstance();
 
     private JButton bakeButton;
     private JButton doublerButton;
     private JButton upgradeButton;
 
     private JFrame backFrame;
+    private JPanel mainPanel;
 
     public GUI() {
         backFrame = new JFrame();
-        JPanel mainPanel = new JPanel();
+        mainPanel = new JPanel();
+        updateBackground();
+
+        // mainPanel layout
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 10, 15, 10)); 
+        mainPanel.setLayout(new GridLayout(0,2,10,10));
+
+        // cupcakeLabel
+        cupcakeLabel = new JLabel();
+        updateCupcakeLabel();
+        mainPanel.add(cupcakeLabel);
         
         // progressBar
         progressBar = new JProgressBar(0,CUPCAKE_GOAL);
         ToolTipManager.sharedInstance().registerComponent(progressBar);
-        progressBar.setToolTipText("Cookies Baked: " + progressBar.getValue() + " / " + CUPCAKE_GOAL);
+        updateProgress();
         mainPanel.add(progressBar);
 
-        // mainPanel layout
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 5, 15, 5)); 
-        mainPanel.setLayout(new GridLayout(0, 1, 10, 10));
-
-        // cupcakeLabel
-        cupcakeLabel = new JLabel("Cupcakes: " + cupcakes);
-        mainPanel.add(cupcakeLabel);
+        // bake button
+        bakeButton = new JButton();
+        bakeButton.addActionListener( e -> bakeCupcake());
+        updateBakeButton();
+        mainPanel.add(bakeButton);
 
         // actionLabel
         actionLabel = new JLabel();
         mainPanel.add(actionLabel);
 
-        // buttons
-        bakeButton = new JButton("Bake Cupcake");
-        bakeButton.addActionListener( e -> bakeCupcake());
-        bakeButton.setToolTipText("Bake value doubled " + doublers + " time(s) = " + (int) Math.pow(bakeCount, doublers));
-        mainPanel.add(bakeButton);
-
-        upgradeButton = new JButton("Upgrade Ingredients!");
+        // upgradeButton
+        upgradeButton = new JButton();
         upgradeButton.addActionListener( e -> upgradeIngredients());
-        upgradeButton.setToolTipText("Price: " + upgradePrice);
+        updateUpgradeButton();
         mainPanel.add(upgradeButton);
 
-        doublerButton = new JButton("Buy Doubler!");
+        // doublerButton
+        doublerButton = new JButton();
+        doublerButton.setPreferredSize(new Dimension(250, 40));
         doublerButton.addActionListener( e -> buyDoubler());
-        doublerButton.setToolTipText("Price: " + doublerPrice);
+        updateDoublerButton();
         mainPanel.add(doublerButton);
-        
 
         // backFrame
         backFrame.add(mainPanel, BorderLayout.CENTER);
@@ -77,17 +84,73 @@ public class GUI {
     }
 
     private void update() {
-        cupcakeLabel.setText("Cupcakes: " + cupcakes);
-        progressBar.setValue(cupcakes);
-        progressBar.setToolTipText("Cookies Baked: " + progressBar.getValue() + " / " + CUPCAKE_GOAL);
-
-        upgradePrice = 10 * (upgrades + 1) * upgrades;
+        upgradePrice = 10 * (upgrades + 1) * (bakeCount + upgrades);
         doublerPrice = (int) Math.pow(10, doublers + 1);
+       
+        updateCupcakeLabel();
+        updateBakeButton();
+        updateUpgradeButton();
+        updateDoublerButton();
+        updateProgress();
+        updateBackground();
 
-        doublerButton.setToolTipText("Price: " + doublerPrice);
-        bakeButton.setToolTipText("Bake value (" + bakeCount + ") doubled " + doublers + " times = " + bakeCount * (int) Math.pow(2, doublers));
-        upgradeButton.setToolTipText("Price: " + upgradePrice);
         checkWin();
+    }
+
+    private void updateBakeButton(){
+        bakeButton.setToolTipText("Bake value (" + bakeCount + ") doubled " + doublers + " times = " + bakeCount * (int) Math.pow(2, doublers));
+        if (bakeCount * (int) Math.pow(2, doublers) > 1){
+            bakeButton.setText("Bake " + bakeCount * (int) Math.pow(2, doublers) + " cupcakes");
+        } else {
+            bakeButton.setText("Bake " + bakeCount * (int) Math.pow(2, doublers) + " cupcake");
+        }
+    }
+    private void updateUpgradeButton(){
+        upgradeButton.setToolTipText("Price: " + upgradePrice + " = 10 * (upgrades {" + upgrades + "} + 1) * (bake value + {" + bakeCount + "} + upgrades{" + upgrades + "})");
+        upgradeButton.setText("Upgrade Ingredients! (" + upgradePrice + ")");
+    }
+    private void updateDoublerButton(){
+        doublerButton.setToolTipText("Price: " + doublerPrice + " = 10 ^ (doublers {" + doublers + "} + 1)");
+        doublerButton.setText("Buy Doubler! (" + doublerPrice + ")");
+    }
+    private void updateProgress(){
+        progressBar.setToolTipText("Cupcakes Baked: " + progressBar.getValue() + " / " + commaFormat.format(CUPCAKE_GOAL));
+        progressBar.setValue(cupcakes);
+    }
+    private void updateCupcakeLabel(){
+        cupcakeLabel.setText("Cupcakes: " + commaFormat.format(cupcakes));
+    }
+    private void updateBackground(){
+        int colorCode = (int) Math.floor(Math.log10(cupcakes));
+        switch (colorCode) {
+            case 0:
+                // red
+                mainPanel.setBackground(new Color(255,40,0));
+                break;
+            case 1:
+                // yellow-orange
+                mainPanel.setBackground(new Color(255,220,0));
+                break;
+            case 2:
+                // pale green
+                mainPanel.setBackground(new Color(175,255,175));  
+                break;
+            case 3:
+                // cyan-aqua
+                mainPanel.setBackground(new Color(0,245,245));  
+                break;
+            case 4:
+                // periwinkle
+                mainPanel.setBackground(new Color(185,155,255));  
+                break;
+            case 5:
+                // pink
+                mainPanel.setBackground(new Color(255,175,175));  
+                break;    
+            default:
+                mainPanel.setBackground(Color.LIGHT_GRAY);
+                break;
+        }
     }
 
     private void checkWin(){
