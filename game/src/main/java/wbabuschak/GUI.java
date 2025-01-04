@@ -114,6 +114,8 @@ public class GUI {
         Image image = icon.getImage();
         backFrame.setIconImage(image);
         backFrame.setVisible(true);
+
+        update();
     }
 
     private void update() {
