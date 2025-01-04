@@ -110,6 +110,9 @@ public class GUI {
         backFrame.setTitle(title);
         backFrame.pack();
         backFrame.setLocationRelativeTo(null);
+        ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("thumbnail.png"));
+        Image image = icon.getImage();
+        backFrame.setIconImage(image);
         backFrame.setVisible(true);
     }
 
