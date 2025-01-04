@@ -6,17 +6,26 @@ import java.text.*;
 
 public class GUI {
 
-    String title = "Cupcake Clicker v0.0.3";
+    String title = "Cupcake Clicker v0.0.4";
 
-    private int CUPCAKE_GOAL = 1000000;
+    private static int CUPCAKE_GOAL = 1000000;
+    private static int SUPERBAKE_COOLDOWN = 50;
+
+    private int superbakeEffects = 10;
+
     private int cupcakes = 0;
     private int bakeCount = 1;
+
+    private int superbakecd = 0;
+    private int superbakecnt = 0;
+    private Boolean superbake = false;
     
     private int upgrades = 0;
     private int doublers = 0;
 
     private int upgradePrice = 10 * (upgrades + 1) * (bakeCount + upgrades);
     private int doublerPrice = (int) Math.pow(10, doublers + 1);
+    private int upgradeSuperbakePrice = (int) Math.pow(2, superbakeEffects);
 
     private JLabel cupcakeLabel;
     private JLabel actionLabel;
@@ -27,9 +36,14 @@ public class GUI {
     private JButton bakeButton;
     private JButton doublerButton;
     private JButton upgradeButton;
+    private JButton superbakeButton;
+    private JButton superbakeUpgradeButton;
 
     private JFrame backFrame;
     private JPanel mainPanel;
+
+    private Color DEFAULT_BUTTON_COLOR = new Color(192,192,192);
+    private static Color ACTIVE_COLOR = new JButton().getBackground();
 
     public GUI() {
         backFrame = new JFrame();
@@ -43,36 +57,52 @@ public class GUI {
         // cupcakeLabel
         cupcakeLabel = new JLabel();
         updateCupcakeLabel();
-        mainPanel.add(cupcakeLabel);
         
         // progressBar
         progressBar = new JProgressBar(0,CUPCAKE_GOAL);
         ToolTipManager.sharedInstance().registerComponent(progressBar);
         updateProgress();
-        mainPanel.add(progressBar);
 
-        // bake button
+        // bakeButton
         bakeButton = new JButton();
         bakeButton.addActionListener( e -> bakeCupcake());
+        bakeButton.setBackground(ACTIVE_COLOR);
         updateBakeButton();
-        mainPanel.add(bakeButton);
 
+        // superbakeButton
+        superbakeButton = new JButton();
+        superbakeButton.addActionListener( e -> superbake());
+        updateSuperbakeButton();
+
+        // superbakeUpgradeButton
+        superbakeUpgradeButton = new JButton();
+        superbakeUpgradeButton.addActionListener( e -> upgradeSuperbake());
+        updateUpgradeSuperbakeButton();
+        
         // actionLabel
         actionLabel = new JLabel();
-        mainPanel.add(actionLabel);
-
+        
         // upgradeButton
         upgradeButton = new JButton();
         upgradeButton.addActionListener( e -> upgradeIngredients());
         updateUpgradeButton();
-        mainPanel.add(upgradeButton);
 
         // doublerButton
         doublerButton = new JButton();
         doublerButton.setPreferredSize(new Dimension(250, 40));
         doublerButton.addActionListener( e -> buyDoubler());
         updateDoublerButton();
+
+        // add elements
+        mainPanel.add(cupcakeLabel);
+        mainPanel.add(progressBar);
+        mainPanel.add(bakeButton);
+        mainPanel.add(actionLabel);
+        mainPanel.add(superbakeButton);
+        mainPanel.add(upgradeButton);
+        mainPanel.add(superbakeUpgradeButton);
         mainPanel.add(doublerButton);
+        
 
         // backFrame
         backFrame.add(mainPanel, BorderLayout.CENTER);
@@ -86,11 +116,14 @@ public class GUI {
     private void update() {
         upgradePrice = 10 * (upgrades + 1) * (bakeCount + upgrades);
         doublerPrice = (int) Math.pow(10, doublers + 1);
+        upgradeSuperbakePrice = (int) Math.pow(2, superbakeEffects);
        
         updateCupcakeLabel();
         updateBakeButton();
         updateUpgradeButton();
         updateDoublerButton();
+        updateSuperbakeButton();
+        updateUpgradeSuperbakeButton();
         updateProgress();
         updateBackground();
 
@@ -108,10 +141,30 @@ public class GUI {
     private void updateUpgradeButton(){
         upgradeButton.setToolTipText("Price: " + upgradePrice + " = 10 * (upgrades {" + upgrades + "} + 1) * (bake value + {" + bakeCount + "} + upgrades{" + upgrades + "})");
         upgradeButton.setText("Upgrade Ingredients! (" + upgradePrice + ")");
+        activateButton(cupcakes >= upgradePrice,upgradeButton);
     }
     private void updateDoublerButton(){
         doublerButton.setToolTipText("Price: " + doublerPrice + " = 10 ^ (doublers {" + doublers + "} + 1)");
         doublerButton.setText("Buy Doubler! (" + doublerPrice + ")");
+        activateButton(cupcakes >= doublerPrice,doublerButton);
+    }
+    private void updateSuperbakeButton(){
+        superbakeButton.setToolTipText("Cooldown: " + SUPERBAKE_COOLDOWN + " clicks");
+        if (superbake){
+            superbakeButton.setText("SUPERBAKE! (" + (superbakeEffects - superbakecnt) + ")");
+        } else {
+            superbakeButton.setText("Activate Superbake! (" + Math.max(0, SUPERBAKE_COOLDOWN - superbakecd) + ")");
+            superbakeButton.setBackground(DEFAULT_BUTTON_COLOR);
+        }
+        activateButton(superbakecd >= SUPERBAKE_COOLDOWN, superbakeButton);
+        if (superbake){
+            superbakeButton.setBackground(new Color(212,175,55));
+        }
+    }
+    private void updateUpgradeSuperbakeButton(){
+        superbakeUpgradeButton.setToolTipText("Price: " + upgradeSuperbakePrice + " = 2 ^ (superbake effects {" + superbakeEffects + "})");
+        superbakeUpgradeButton.setText("Buy Superbake Upgrade! (" + upgradeSuperbakePrice + ")");
+        activateButton(cupcakes >= upgradeSuperbakePrice,superbakeUpgradeButton);
     }
     private void updateProgress(){
         progressBar.setToolTipText("Cupcakes Baked: " + progressBar.getValue() + " / " + commaFormat.format(CUPCAKE_GOAL));
@@ -125,30 +178,30 @@ public class GUI {
         switch (colorCode) {
             case 0:
                 // red
-                mainPanel.setBackground(new Color(255,40,0));
+                mainPanel.setBackground(new Color(255,179,186));
                 break;
             case 1:
-                // yellow-orange
-                mainPanel.setBackground(new Color(255,220,0));
+                // orange
+                mainPanel.setBackground(new Color(255,223,186));
                 break;
             case 2:
-                // pale green
-                mainPanel.setBackground(new Color(175,255,175));  
+                // yellow
+                mainPanel.setBackground(new Color(255,255,186));  
                 break;
             case 3:
-                // cyan-aqua
-                mainPanel.setBackground(new Color(0,245,245));  
+                // green
+                mainPanel.setBackground(new Color(186,255,201));  
                 break;
             case 4:
-                // periwinkle
-                mainPanel.setBackground(new Color(185,155,255));  
+                // blue
+                mainPanel.setBackground(new Color(186,225,255));  
                 break;
             case 5:
                 // pink
                 mainPanel.setBackground(new Color(255,175,175));  
                 break;    
             default:
-                mainPanel.setBackground(Color.LIGHT_GRAY);
+                mainPanel.setBackground(Color.WHITE);
                 break;
         }
     }
@@ -174,12 +227,25 @@ public class GUI {
     }
 
     private void bakeCupcake() {
-        cupcakes += bakeCount * (int) Math.pow(2, doublers);
-        if ((int) Math.pow(bakeCount, doublers) > 1){
-            actionLabel.setText("Baked " + bakeCount * (int) Math.pow(2, doublers) + " cupcakes!");
+        if (superbake){
+            cupcakes += 2 * bakeCount * (int) Math.pow(2, doublers);
+            superbakecnt++;
+            actionLabel.setText("Baked " + 2 * bakeCount * (int) Math.pow(2, doublers) + " cupcakes!");
         } else {
-            actionLabel.setText("Baked " + bakeCount * (int) Math.pow(2, doublers) + " cupcake!");
+            cupcakes += bakeCount * (int) Math.pow(2, doublers);
+            superbakecd++;
+            if ((int) Math.pow(bakeCount, doublers) > 1){
+                actionLabel.setText("Baked " + bakeCount * (int) Math.pow(2, doublers) + " cupcakes!");
+            } else {
+                actionLabel.setText("Baked " + bakeCount * (int) Math.pow(2, doublers) + " cupcake!");
+            }
         }
+        if (superbakecnt >= superbakeEffects){
+            superbake = false;
+            superbakecnt = 0;
+            superbakecd = 0;
+        }
+        
         update();
     }
 
@@ -204,6 +270,41 @@ public class GUI {
             actionLabel.setText("Insufficient funds to purchase upgrade.");
         }
         update();
+    }
+
+    private void upgradeSuperbake(){
+        if (cupcakes >= upgradeSuperbakePrice){
+            cupcakes -= upgradeSuperbakePrice;
+            superbakeEffects++;
+            actionLabel.setText("Superbake upgrade purchased! -" + upgradeSuperbakePrice + " cupcakes!");
+        } else {
+            actionLabel.setText("Insufficient funds to purchase Superbake upgrade.");
+        }
+        update();
+    }
+
+    private void superbake() {
+        if (superbakecd >= SUPERBAKE_COOLDOWN){
+            superbake = true;
+            superbakecd = 0;
+        }
+        update();
+    }
+
+    private void activateButton(Boolean truth, JButton button){
+        if (truth){
+            button.setBackground(ACTIVE_COLOR);
+        } else {
+            button.setBackground(DEFAULT_BUTTON_COLOR);
+        }
+    }
+
+    private void activateButton(Boolean truth, JButton button, Color activeColor){
+        if (truth){
+            button.setBackground(activeColor);
+        } else {
+            button.setBackground(DEFAULT_BUTTON_COLOR);
+        }
     }
 
     
