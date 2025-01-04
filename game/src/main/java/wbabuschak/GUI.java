@@ -178,7 +178,7 @@ public class GUI {
         switch (colorCode) {
             case 0:
                 // red
-                mainPanel.setBackground(new Color(255,179,186));
+                mainPanel.setBackground(new Color(255,139,148));
                 break;
             case 1:
                 // orange
@@ -198,10 +198,11 @@ public class GUI {
                 break;
             case 5:
                 // pink
-                mainPanel.setBackground(new Color(255,175,175));  
+                mainPanel.setBackground(new Color(255,170,165));  
                 break;    
             default:
-                mainPanel.setBackground(Color.WHITE);
+                // red
+                mainPanel.setBackground(new Color(255,139,148));
                 break;
         }
     }
