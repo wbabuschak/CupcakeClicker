@@ -152,7 +152,7 @@ public class GUI {
         activateButton(cupcakes >= doublerPrice,doublerButton);
     }
     private void updateSuperbakeButton(){
-        superbakeButton.setToolTipText("Cooldown: " + SUPERBAKE_COOLDOWN + " clicks");
+        superbakeButton.setToolTipText("Cooldown: " + SUPERBAKE_COOLDOWN + " clicks, Effect: " + superbakeEffects + " clicks");
         if (superbake){
             superbakeButton.setText("SUPERBAKE! (" + (superbakeEffects - superbakecnt) + ")");
         } else {
