@@ -6,16 +6,17 @@ import java.text.*;
 
 public class GUI {
 
-    String title = "Cupcake Clicker v0.0.6";
+    String title = "Cupcake Clicker v0.0.7";
 
     private static int CUPCAKE_GOAL = 1000000;
     private static int SUPERBAKE_COOLDOWN = 50;
     private static int AUTO_SUPER_COST = 7500;
-    private static int CLICKER_SUPER_COST = 15000;
+    private static int AUTOBAKER_SUPER_COST = 15000;
     private static int TICK_RATE = 100;
 
     private Timer gameClock;
     private int tick = 0;
+    private int clicks = 0;
 
     private int superbakeEffects = 10;
 
@@ -27,16 +28,16 @@ public class GUI {
     private Boolean superbake = false;
 
     private Boolean autoSuper = false;
-    private Boolean clickerSuper = false;
+    private Boolean autobakerSuper = false;
     
     private int upgrades = 0;
     private int doublers = 0;
-    private int clickers = 0;
+    private int autobakers = 0;
 
     private int upgradePrice = 10 * (upgrades + 1) * (bakeCount + upgrades);
     private int doublerPrice = (int) Math.pow(10, doublers + 1);
     private int upgradeSuperbakePrice = (int) Math.pow(2, superbakeEffects);
-    private int autoclickerPrice = 100 * (int) Math.pow(12, clickers + 1);
+    private int autobakerPrice = 100 * (int) Math.pow(12, autobakers + 1);
 
     private JLabel cupcakeLabel;
     private JLabel actionLabel;
@@ -51,11 +52,17 @@ public class GUI {
     private JButton superbakeUpgradeButton;
     private JButton autoSuperButton;
     private JButton winButton;
-    private JButton autoclickerButton;
-    private JButton autoclickerSuperbakeButton;
+    private JButton autobakerButton;
+    private JButton autobakerSuperbakeButton;
+    private JButton statsButton;
+
+    private JTextArea statsArea;
+    private Boolean statsVisible = false;
+    private String statsString;
 
     private JFrame backFrame;
     private JPanel mainPanel;
+    private JFrame statsFrame;
 
     private static Color DEFAULT_BUTTON_COLOR = new Color(192,192,192);
     private static Color ACTIVE_COLOR = new JButton().getBackground();
@@ -128,17 +135,17 @@ public class GUI {
         setSize(autoSuperButton, 1);
         updateAutoSuperButton();
 
-        // autoclickerButton
-        autoclickerButton = new JButton();
-        autoclickerButton.addActionListener( e -> buyAutoClicker());
-        setSize(autoclickerButton, 0);
-        updateAutoClickerButton();
+        // autobakerButton
+        autobakerButton = new JButton();
+        autobakerButton.addActionListener( e -> buyautobaker());
+        setSize(autobakerButton, 0);
+        updateautobakerButton();
 
-        // autoclickerSuperbakeButton
-        autoclickerSuperbakeButton = new JButton();
-        autoclickerSuperbakeButton.addActionListener( e -> buyAutoclickerSuperbake());
-        setSize(autoclickerSuperbakeButton, 1);
-        updateAutoclickerSuperbakeButton();
+        // autobakerSuperbakeButton
+        autobakerSuperbakeButton = new JButton();
+        autobakerSuperbakeButton.addActionListener( e -> buyautobakerSuperbake());
+        setSize(autobakerSuperbakeButton, 1);
+        updateAutobakerSuperbakeButton();
 
         // winButton
         winButton = new JButton();
@@ -146,11 +153,17 @@ public class GUI {
         setSize(winButton, 0);
         updateWinButton();
 
+        // statsButton
+        statsButton = new JButton("Statistics");
+        statsButton.addActionListener( e -> openStatisticsPanel());
+        setSize(statsButton, 0);
+
         // add elements
         addElement(cupcakeLabel, 0, 0);
         addElement(progressBar, 0, 1);
         addElement(actionLabel, 1, 1);
         addElement(winButton, 0, 3);
+        addElement(statsButton, 3, 3);
 
         addElement(bakeButton, 1, 0);
         addElement(superbakeButton, 2, 0);
@@ -160,8 +173,8 @@ public class GUI {
         addElement(upgradeButton, 1, 3);
         addElement(doublerButton, 2, 3);
 
-        addElement(autoclickerButton, 3, 0);
-        addElement(autoclickerSuperbakeButton, 3, 2);
+        addElement(autobakerButton, 3, 0);
+        addElement(autobakerSuperbakeButton, 3, 2);
         
 
         // backFrame
@@ -182,8 +195,14 @@ public class GUI {
         upgradePrice = 10 * (upgrades + 1) * (bakeCount + upgrades);
         doublerPrice = (int) Math.pow(10, doublers + 1);
         upgradeSuperbakePrice = (int) Math.pow(2, superbakeEffects);
-        autoclickerPrice = 100 * (int) Math.pow(12, clickers + 1);
-
+        autobakerPrice = 100 * (int) Math.pow(12, autobakers + 1);
+        statsString = "Total clicks: " + commaFormat.format(clicks) 
+        + "\n\nIngredient Upgrades: " + upgrades 
+        + "\nDoublers: " + doublers 
+        + "\nAutobakers: " + autobakers 
+        + "\n\nAutomatic Superbaking: " + autoSuper
+        + "\nAutobaker Superbaking: " + autobakerSuper;
+        
        
         updateBakeButton();
         updateUpgradeButton();
@@ -192,8 +211,10 @@ public class GUI {
         updateUpgradeSuperbakeButton();
         updateAutoSuperButton();
         updateWinButton();
-        updateAutoClickerButton();
-        updateAutoclickerSuperbakeButton();
+        updateautobakerButton();
+        updateAutobakerSuperbakeButton();
+        updateStatsArea();
+        activateButton(!statsVisible,statsButton);
 
         updateCupcakeLabel();
         updateProgress();
@@ -202,10 +223,10 @@ public class GUI {
 
     private void clockUpdate() {
         tick++;
-        // autoclickers
+        // autobakers
         if (tick % 10 == 0){
-            for (int i = 0; i < clickers; i++){
-                if (clickerSuper){
+            for (int i = 0; i < autobakers; i++){
+                if (autobakerSuper){
                     if (superbake){
                         cupcakes += 2 * bakeCount * (int) Math.pow(2, doublers);
                         superbakecnt++;
@@ -218,7 +239,6 @@ public class GUI {
                         superbakecnt = 0;
                         superbakecd = 0;
                     }
-                    
                     if (autoSuper){
                         superbake();
                     }
@@ -276,14 +296,14 @@ public class GUI {
             autoSuperButton.setText("Puchase Automatic Superbaker: (" + AUTO_SUPER_COST + ")");
         }
     }
-    private void updateAutoclickerSuperbakeButton(){
-        autoclickerSuperbakeButton.setToolTipText("Allows your clickers to utilize Superbake");
-        activateButton(cupcakes >= CLICKER_SUPER_COST && clickerSuper == false, autoclickerSuperbakeButton);
-        if (clickerSuper){
-            autoclickerSuperbakeButton.setText("Clickers Superbaking!");
-            autoclickerSuperbakeButton.setBackground(PURCHASED_COLOR);
+    private void updateAutobakerSuperbakeButton(){
+        autobakerSuperbakeButton.setToolTipText("Allows your autobakers to utilize Superbake");
+        activateButton(cupcakes >= AUTOBAKER_SUPER_COST && autobakerSuper == false, autobakerSuperbakeButton);
+        if (autobakerSuper){
+            autobakerSuperbakeButton.setText("Clickers Superbaking!");
+            autobakerSuperbakeButton.setBackground(PURCHASED_COLOR);
         } else {
-            autoclickerSuperbakeButton.setText("Puchase Clicker Superbaking: (" + CLICKER_SUPER_COST + ")");
+            autobakerSuperbakeButton.setText("Puchase Clicker Superbaking: (" + AUTOBAKER_SUPER_COST + ")");
         }
     }
     private void updateWinButton(){
@@ -291,10 +311,10 @@ public class GUI {
         winButton.setText("Win! (closes game)");
         activateButton(cupcakes >= CUPCAKE_GOAL, winButton);
     }
-    private void updateAutoClickerButton(){
-        autoclickerButton.setToolTipText("Price: " + autoclickerPrice + " = 100 * 12 ^ (autoclickers {" + clickers + "} + 1)");
-        autoclickerButton.setText("Buy Autoclicker! (" + autoclickerPrice + ")");
-        activateButton(cupcakes >= autoclickerPrice,autoclickerButton);
+    private void updateautobakerButton(){
+        autobakerButton.setToolTipText("Price: " + autobakerPrice + " = 100 * 12 ^ (autobakers {" + autobakers + "} + 1)");
+        autobakerButton.setText("Buy Autobaker! (" + autobakerPrice + ")");
+        activateButton(cupcakes >= autobakerPrice,autobakerButton);
     }
     private void updateProgress(){
         progressBar.setToolTipText("Cupcakes Baked: " + progressBar.getValue() + " / " + commaFormat.format(CUPCAKE_GOAL));
@@ -305,6 +325,11 @@ public class GUI {
     }
     private void updateBackground(){
         mainPanel.setBackground(new Color(255, 225 - (int) (95 * Math.min(1,(Math.log10(cupcakes + 1)/Math.log10(CUPCAKE_GOAL)))), 225 - (int) (95 * Math.min(1,(Math.log10(cupcakes + 1)/Math.log10(CUPCAKE_GOAL))))));
+    }
+    private void updateStatsArea(){
+        if (statsVisible){
+            statsArea.setText(statsString);
+        }   
     }
 
     private void checkWin(){
@@ -327,6 +352,7 @@ public class GUI {
         }
     }
     private void bakeCupcake() {
+        clicks++;
         if (superbake){
             cupcakes += 2 * bakeCount * (int) Math.pow(2, doublers);
             superbakecnt++;
@@ -402,24 +428,53 @@ public class GUI {
         }
         update();
     }
-    private void buyAutoclickerSuperbake() {
-        if (cupcakes >= CLICKER_SUPER_COST){
-            cupcakes -= CLICKER_SUPER_COST;
-            clickerSuper = true;
-            actionLabel.setText("Upgrade purchased! -" + CLICKER_SUPER_COST + " cupcakes!");
+    private void buyautobakerSuperbake() {
+        if (cupcakes >= AUTOBAKER_SUPER_COST){
+            cupcakes -= AUTOBAKER_SUPER_COST;
+            autobakerSuper = true;
+            actionLabel.setText("Upgrade purchased! -" + AUTOBAKER_SUPER_COST + " cupcakes!");
         } else {
-            actionLabel.setText("Insufficient funds to purchase Autoclicker Superbaking.");
+            actionLabel.setText("Insufficient funds to purchase autobaker Superbaking.");
         }
         update();
     }
-    private void buyAutoClicker() {
-        if (cupcakes >= autoclickerPrice){
-            cupcakes -= autoclickerPrice;
-            clickers++;
-            actionLabel.setText("Autoclicker purchased! -" + autoclickerPrice + " cupcakes!");
+    private void buyautobaker() {
+        if (cupcakes >= autobakerPrice){
+            cupcakes -= autobakerPrice;
+            autobakers++;
+            actionLabel.setText("autobaker purchased! -" + autobakerPrice + " cupcakes!");
         } else {
-            actionLabel.setText("Insufficient funds to purchase Autoclicker.");
+            actionLabel.setText("Insufficient funds to purchase autobaker.");
         }
+        update();
+    }
+
+    private void openStatisticsPanel(){
+        if (statsVisible){
+            return;
+        }
+        statsVisible = true;
+        statsFrame = new JFrame("Statistics");
+        JPanel statsPanel = new JPanel();
+        statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
+        JButton closeStatsButton = new JButton("Close Statistics");
+        closeStatsButton.setPreferredSize(new Dimension(300, 50));
+        closeStatsButton.setMaximumSize(new Dimension(300, 50));
+        closeStatsButton.addActionListener (e -> closeStats());
+        activateButton(true, closeStatsButton);
+        statsArea = new JTextArea();
+        statsArea.setEditable(false);
+        statsArea.setOpaque(false);
+        statsPanel.add(statsArea);
+        statsPanel.add(closeStatsButton);
+        statsFrame.add(statsPanel);
+        updateStatsArea();
+        statsFrame.setSize(300,300);
+        statsFrame.setLocation(backFrame.getLocationOnScreen());
+        statsFrame.setLocation(statsFrame.getX() + backFrame.getWidth(), statsFrame.getY());
+        statsFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        statsPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        statsFrame.setVisible(true);
         update();
     }
 
@@ -445,6 +500,11 @@ public class GUI {
                 component.setMinimumSize(new Dimension(250, 50));
                 break;
         }
+    }
+    private void closeStats(){
+        statsFrame.dispose();
+        statsVisible = false;
+        update();
     }
 
     private void activateButton(Boolean truth, JButton button){
