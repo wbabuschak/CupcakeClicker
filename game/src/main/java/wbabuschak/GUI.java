@@ -514,11 +514,14 @@ public class GUI {
             button.setBackground(DEFAULT_BUTTON_COLOR);
         }
     }
-    private void activateButton(Boolean truth, JButton button, Color activeColor){
-        if (truth){
-            button.setBackground(activeColor);
-        } else {
-            button.setBackground(DEFAULT_BUTTON_COLOR);
-        }
-    }
+
+    // // alternate activateButton color
+    // private void activateButton(Boolean truth, JButton button, Color activeColor){
+    //     if (truth){
+    //         button.setBackground(activeColor);
+    //     } else {
+    //         button.setBackground(DEFAULT_BUTTON_COLOR);
+    //     }
+    // } 
+    
 }
