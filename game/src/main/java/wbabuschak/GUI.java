@@ -186,6 +186,7 @@ public class GUI {
         ImageIcon icon = new ImageIcon(getClass().getClassLoader().getResource("thumbnail.png"));
         Image image = icon.getImage();
         backFrame.setIconImage(image);
+        backFrame.setLocation(0,100);
         backFrame.setVisible(true);
 
         gameClock.start();
@@ -471,7 +472,7 @@ public class GUI {
         updateStatsArea();
         statsFrame.setSize(300,300);
         statsFrame.setLocation(backFrame.getLocationOnScreen());
-        statsFrame.setLocation(statsFrame.getX() + backFrame.getWidth(), statsFrame.getY());
+        statsFrame.setLocation(statsFrame.getX(), statsFrame.getY() + backFrame.getHeight());
         statsFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         statsPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         statsFrame.setVisible(true);
